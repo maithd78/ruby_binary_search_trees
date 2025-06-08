@@ -1,14 +1,24 @@
 require_relative "libs/node"
 require_relative "libs/tree"
 
-array = [1, 2, 3, 4, 5, 6, 7]
-test = Tree.new(array)
+bst = Tree.new(Array.new(15) { rand(1..100) })
+bst.pretty_print
 
-# test.insert(10)
-test.pretty_print
-p test.find_r(7)
+p bst.balanced?
+p bst.level_order
+p bst.preorder
+p bst.postorder
+p bst.inorder
 
-test.pretty_print
+100.times do
+  bst.insert(rand(1..100))
+end
 
-# tree = Tree.new([1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324])
-# tree.pretty_print
+p bst.balanced?
+bst.rebalance
+p bst.balanced?
+
+p bst.level_order
+p bst.preorder
+p bst.postorder
+p bst.inorder

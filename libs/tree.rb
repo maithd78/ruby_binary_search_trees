@@ -2,7 +2,8 @@ require_relative "node"
 require "pry-byebug"
 
 # Class for tree
-class Tree
+class Tree # rubocop:disable Metrics/ClassLength
+  include Enumerable
   attr_accessor :root
 
   def initialize(array)
@@ -55,7 +56,7 @@ class Tree
     current
   end
 
-  def delete_r(val, current = @root)
+  def delete_r(val, current = @root) # rubocop:disable Metrics/AbcSize,Metrics/MethodLength
     # base case
     return current if current.nil?
 
@@ -78,7 +79,7 @@ class Tree
     current
   end
 
-  def delete_i(val, current = @root)
+  def delete_i(val, current = @root) # rubocop:disable Metrics/AbcSize,Metrics/CyclomaticComplexity,Metrics/MethodLength,Metrics/PerceivedComplexity
     # create a pointer that iterates over the tree until the val is found or until there are no more sub trees.
     until current.data == val || current.nil?
       prev = current
@@ -114,6 +115,7 @@ class Tree
     # elsif current.data < val
     #   find_r(val, current.right)
     # end
+    # byebug
     current.data > val ? find_r(val, current.left) : find_r(val, current.right)
   end
 
@@ -127,6 +129,97 @@ class Tree
     # end
     current = current.data > val ? current.left : current.right until current.nil? || current.data == val
     current
+  end
+
+  def level_order(current = @root, queue = [], arr = [], &block)
+    return arr if current.nil?
+
+    queue << current.left unless current.left.nil?
+    queue << current.right unless current.right.nil?
+
+    if block_given?
+      yield current.data
+    else
+      arr << current.data
+    end
+
+    level_order(queue.shift, queue, arr, &block)
+  end
+
+  def level_order_i(current = @root, queue = [], arr = []) # rubocop:disable Metrics/MethodLength,Metrics/AbcSize
+    while current
+      queue << current.left unless current.left.nil?
+      queue << current.right unless current.right.nil?
+
+      if block_given?
+        yield current.data
+      else
+        arr << current.data
+        p arr if queue.empty?
+      end
+      current = queue.shift
+    end
+  end
+
+  def inorder(current = @root, arr = [], &block)
+    # traverse tree left -> root -> right
+    return arr if current.nil? # base case
+
+    inorder(current.left, arr, &block)
+    block_given? ? (yield current.data) : arr << current.data
+    inorder(current.right, arr, &block)
+  end
+
+  def preorder(current = @root, arr = [], &block)
+    # traverse tree root -> left -> right
+    return arr if current.nil? # base case
+
+    block_given? ? (yield current.data) : arr << current.data
+    preorder(current.left, arr, &block)
+    preorder(current.right, arr, &block)
+  end
+
+  def postorder(current = @root, arr = [], &block)
+    # traverse tree left -> right -> root
+    return arr if current.nil? # base case
+
+    postorder(current.left, arr, &block)
+    postorder(current.right, arr, &block)
+    block_given? ? (yield current.data) : arr << current.data
+  end
+
+  def height(val, current = @root, first_call = 1)
+    current = find_r(val) if first_call
+    return -1 if current.nil?
+
+    left_height = height(val, current.left, false)
+    right_height = height(val, current.right, false)
+    [left_height, right_height].max + 1
+  end
+
+  def depth(val, current = @root)
+    count = 0
+
+    until current.nil? || current.data == val
+      current = current.data > val ? current.left : current.right
+      count += 1
+    end
+    count unless current.nil?
+  end
+
+  def balanced?(current = @root)
+    return true if current.nil?
+
+    left_height = height(current.data, current.left, false)
+    right_height = height(current.data, current.right, false)
+
+    return false if left_height - right_height > 1
+
+    balanced?(current.left) && balanced?(current.right)
+  end
+
+  def rebalance
+    @root = build_tree(inorder)
   end
 
   def pretty_print(node = @root, prefix = "", is_left = true) # rubocop:disable Style/OptionalBooleanParameter
