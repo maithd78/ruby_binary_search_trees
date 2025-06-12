@@ -88,7 +88,7 @@ class Tree
         return current
       end
     end
-    check if the node is a leaf or has a left or right branch
+    # check if the node is a leaf or has a left or right branch
     if current.left.nil? || current.right.nil?
       new_curr = current.left.nil? ? current.right : current.left
       if current == prev.left
