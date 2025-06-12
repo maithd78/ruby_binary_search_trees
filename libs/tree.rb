@@ -1,9 +1,10 @@
 require_relative "node"
-require "pry-byebug"
+require_relative "traverse/traversal_methods"
 
 # Class for tree
-class Tree # rubocop:disable Metrics/ClassLength
+class Tree
   include Enumerable
+  include TraversalMethods
   attr_accessor :root
 
   def initialize(array)
@@ -36,16 +37,12 @@ class Tree # rubocop:disable Metrics/ClassLength
     current
   end
 
-  def insert_i(val, current = @root) # rubocop:disable Metrics/MethodLength
+  def insert_i(val, current = @root)
     while current
       parent = current
-      if current.data > val
-        current = current.left
-      elsif current.data < val
-        current = current.right
-      else
-        return current
-      end
+      return current if current.data == val
+
+      current = current.data > val ? current.left : current.right
     end
     parent.data > val ? parent.left = Node.new(val) : parent.right = Node.new(val)
   end
@@ -56,7 +53,7 @@ class Tree # rubocop:disable Metrics/ClassLength
     current
   end
 
-  def delete_r(val, current = @root) # rubocop:disable Metrics/AbcSize,Metrics/MethodLength
+  def delete_r(val, current = @root)
     # base case
     return current if current.nil?
 
@@ -79,7 +76,7 @@ class Tree # rubocop:disable Metrics/ClassLength
     current
   end
 
-  def delete_i(val, current = @root) # rubocop:disable Metrics/AbcSize,Metrics/CyclomaticComplexity,Metrics/MethodLength,Metrics/PerceivedComplexity
+  def delete_i(val, current = @root)
     # create a pointer that iterates over the tree until the val is found or until there are no more sub trees.
     until current.data == val || current.nil?
       prev = current
@@ -91,7 +88,7 @@ class Tree # rubocop:disable Metrics/ClassLength
         return current
       end
     end
-    # check if the node is a leaf or has a left or right branch
+    check if the node is a leaf or has a left or right branch
     if current.left.nil? || current.right.nil?
       new_curr = current.left.nil? ? current.right : current.left
       if current == prev.left
@@ -108,14 +105,16 @@ class Tree # rubocop:disable Metrics/ClassLength
     # base case returns if no more childern or if data is found
     return current if current.nil? || current.data == val
 
-    # # val is less than curr data, go Left
+    # val is less than curr data, go Left
+
     # if current.data > val
     #   find_r(val, current.left)
-    # # val is more than curr data, go right
+
+    # val is more than curr data, go right
+
     # elsif current.data < val
     #   find_r(val, current.right)
     # end
-    # byebug
     current.data > val ? find_r(val, current.left) : find_r(val, current.right)
   end
 
@@ -129,72 +128,6 @@ class Tree # rubocop:disable Metrics/ClassLength
     # end
     current = current.data > val ? current.left : current.right until current.nil? || current.data == val
     current
-  end
-
-  def level_order(current = @root, queue = [], arr = [], &block)
-    return arr if current.nil?
-
-    queue << current.left unless current.left.nil?
-    queue << current.right unless current.right.nil?
-
-    if block_given?
-      yield current.data
-    else
-      arr << current.data
-    end
-
-    level_order(queue.shift, queue, arr, &block)
-  end
-
-  def level_order_i(current = @root, queue = [], arr = []) # rubocop:disable Metrics/MethodLength,Metrics/AbcSize
-    while current
-      queue << current.left unless current.left.nil?
-      queue << current.right unless current.right.nil?
-
-      if block_given?
-        yield current.data
-      else
-        arr << current.data
-        p arr if queue.empty?
-      end
-      current = queue.shift
-    end
-  end
-
-  def inorder(current = @root, arr = [], &block)
-    # traverse tree left -> root -> right
-    return arr if current.nil? # base case
-
-    inorder(current.left, arr, &block)
-    block_given? ? (yield current.data) : arr << current.data
-    inorder(current.right, arr, &block)
-  end
-
-  def preorder(current = @root, arr = [], &block)
-    # traverse tree root -> left -> right
-    return arr if current.nil? # base case
-
-    block_given? ? (yield current.data) : arr << current.data
-    preorder(current.left, arr, &block)
-    preorder(current.right, arr, &block)
-  end
-
-  def postorder(current = @root, arr = [], &block)
-    # traverse tree left -> right -> root
-    return arr if current.nil? # base case
-
-    postorder(current.left, arr, &block)
-    postorder(current.right, arr, &block)
-    block_given? ? (yield current.data) : arr << current.data
-  end
-
-  def height(val, current = @root, first_call = 1)
-    current = find_r(val) if first_call
-    return -1 if current.nil?
-
-    left_height = height(val, current.left, false)
-    right_height = height(val, current.right, false)
-    [left_height, right_height].max + 1
   end
 
   def depth(val, current = @root)
